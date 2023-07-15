@@ -4,6 +4,25 @@
 #include "config.h"
 #include <fuse/fuse.h>
 
+struct diofs_dentry {
+	// parent AND name should be NULL for the root.
+	char *name;
+
+	unsigned int ino;
+
+	struct diofs_dentry *parent;
+	struct diofs_dentry *first_child;
+	struct diofs_dentry *next_sib;
+};
+
+struct diofs_inode {
+	void *content;
+	off_t size;
+	ino_t ino;
+	nlink_t nlink;
+	mode_t mode;
+};
+
 int diofs_getattr(const char *path, struct stat *s);
 int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi);
 int diofs_open(const char *path, struct fuse_file_info *fi);
