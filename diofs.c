@@ -6,53 +6,52 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
 
 #include "diofs.h"
 #include "util.h"
 
-struct diofs_dentry diofs_test_file;
-struct diofs_dentry diofs_root;
+static struct diofs_dentry diofs_test_file;
+static struct diofs_dentry diofs_root;
 
-struct diofs_inode diofs_root_inode;
-struct diofs_inode diofs_test_inode;
+static struct diofs_inode diofs_root_inode;
+static struct diofs_inode diofs_test_inode;
 
-const char temp_filename[] = "test_file";
-const char temp_path[] = "/test_file";
-const char temp_contents[] = "this is a test file\n\0";
-const int temp_len = sizeof(temp_contents)/sizeof(char);
+char temp_filename[] = "test_file";
+char temp_path[] = "/test_file";
+char temp_contents[] = "this is a test file\n\0";
+int temp_len = sizeof(temp_contents)/sizeof(char);
 
-void *init(struct fuse_conn_info *conn) {
-	diofs_root = (struct diofs_dentry) {
-		.parent = &diofs_root,
-		.name = NULL,
-		.ino = 1,
-		.first_child = &diofs_test_file,
-		.next_sib = NULL
-	};
+void *diofs_init(struct fuse_conn_info *conn) {
+	assert(&diofs_root != NULL);
+	assert(&diofs_test_file != NULL);
+	assert(&diofs_root_inode != NULL);
+	assert(&diofs_test_inode != NULL);
 
-	diofs_test_file = (struct diofs_dentry) {
-		.parent = &diofs_root,
-		.name = temp_filename,
-		.ino = 2,
-		.first_child = NULL,
-		.next_sib = NULL
-	};
+	diofs_root.parent = &diofs_root;
+	diofs_root.name = NULL;
+	diofs_root.ino = 1;
+	diofs_root.first_child = &diofs_test_file;
+	diofs_root.next_sib = NULL;
 
-	diofs_root_inode = (struct diofs_inode) {
-		.content = NULL,
-		.size = 0,
-		.nlink = 2,
-		.ino = 1,
-		.mode = S_IFDIR | 0755
-	};
+	diofs_test_file.parent = &diofs_root;
+	diofs_test_file.name = temp_filename;
+	diofs_test_file.ino = 2;
+	diofs_test_file.first_child = NULL;
+	diofs_test_file.next_sib = NULL;
 
-	diofs_test_inode = (struct diofs_inode) {
-		.content = temp_contents,
-		.size = temp_len,
-		.nlink = 1,
-		.ino = 2,
-		.mode = S_IFREG | 0777,
-	};
+	diofs_root_inode.content = NULL;
+	diofs_root_inode.size = 0;
+	diofs_root_inode.nlink = 2;
+	diofs_root_inode.ino = 1;
+	diofs_root_inode.mode = S_IFDIR | 0755;
+
+	diofs_test_inode.content = temp_contents;
+	diofs_test_inode.size = temp_len;
+	diofs_test_inode.nlink = 1;
+	diofs_test_inode.ino = 2;
+	diofs_test_inode.mode = S_IFREG | 0777;
 }
 
 struct diofs_inode *lookup_inode(ino_t ino) {
@@ -65,64 +64,72 @@ struct diofs_inode *lookup_inode(ino_t ino) {
 	}
 }
 
+// NOTE: Returns 0 for equal strings and 1 for unequal strings
+int new_strcmp(const char *x, const char *y) {
+	if (x == NULL)
+		return y == NULL? STR_EQUAL : !STR_EQUAL;
+	else if (y == NULL)
+		return x == NULL? STR_EQUAL : !STR_EQUAL;
+
+	char c;
+	int a;
+
+	for (a = 0; (c = x[a]) != 0; a++) {
+		if (c != y[a] || y[a] == 0) return !STR_EQUAL;
+	}
+
+	return (y[a] == 0? STR_EQUAL : !STR_EQUAL);
+}
+
+// NOTE: Annotate the code and clean it up later.
 struct diofs_inode *inode_from_path(const char *path) {
+	if (new_strcmp(path, "/") == STR_EQUAL) {
+		return &diofs_root_inode;
+	}
+
 	// NOTE: This part is very inefficient. It may need to be sped up later.
 	char *path_dup = strdup(path);
 	char *token, *saveptr1;
 
 	// NOTE: This part may need to be cached to increase performance. Doing this
 	// each time a file is referenced might be a bad idea.
-	struct diofs_dentry *cfile = &diofs_root;
+	struct diofs_dentry *cfile = diofs_root.first_child, *cfile_prev = NULL;
 	struct diofs_inode *final_file = NULL;
-	while ((token = strtok_r(path_dup, "/", &saveptr1)) != NULL) {
-		for (; cfile != NULL; cfile = cfile->next_sib) {
-			if (strcmp(token, cfile->name) == STR_EQUAL) {
+	char *prev_token = NULL;
+	token = strtok_r(path_dup, "/", &saveptr1);
+	while (prev_token != token) {
+		for (cfile = cfile; cfile != NULL; cfile = cfile->next_sib) {
+			if (new_strcmp(cfile->name, token) == STR_EQUAL) {
+				cfile_prev = cfile;
 				cfile = cfile->first_child;
+				prev_token = token;
+				token = strtok_r(path_dup, "/", &saveptr1);
 				break;
 			}
 		}
 
-		if (cfile == NULL)
-			// If the token does not match anything in the current directory,
-			// the file does not exist.
+		if (cfile == NULL && token != prev_token) {
 			goto cleanup;
+		}
 	}
 
-	if (token == NULL)
-		final_file = lookup_inode(cfile->ino);
+	if (token == prev_token)
+		final_file = lookup_inode(cfile_prev->ino);
 
 cleanup:
 	// TODO: There's probably a better way to do this.
-	while (token != NULL) token = strtok_r(path_dup, "/", &saveptr1);
+	// while (token != NULL) token = strtok_r(path_dup, "/", &saveptr1);
 	free(path_dup);
 
 	if (final_file == NULL) {
 		errno = ENOENT;
 		return NULL;
 	}
+
+	return final_file;
 }
 
 int diofs_getattr(const char *path, struct stat *s) {
-	/* if (strcmp(path, "/") == STR_EQUAL) {
-		*s = (struct stat) {
-			.st_mode = S_IFDIR | 0755,
-			.st_nlink = 2,
-		};
-
-		return 0;
-	} else if (strcmp(path, temp_path) == STR_EQUAL) {
-		*s = (struct stat) {
-			.st_mode = S_IFREG | 0777,
-			.st_size = strlen(temp_contents),
-			.st_nlink = 1
-		};
-
-		return 0;
-	} else {
-		errno = ENOENT;
-		return -1;
-	} */
-
 	struct diofs_inode *i = inode_from_path(path);
 	if (i != NULL) {
 		*s = (struct stat) {
@@ -139,6 +146,7 @@ int diofs_getattr(const char *path, struct stat *s) {
 	}
 }
 
+// NOTE: Get to this next
 int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info* fi) {
 	(void) offset;

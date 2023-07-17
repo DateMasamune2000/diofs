@@ -5,7 +5,6 @@
 #include <fuse/fuse.h>
 
 struct diofs_dentry {
-	// parent AND name should be NULL for the root.
 	char *name;
 
 	unsigned int ino;
@@ -23,6 +22,7 @@ struct diofs_inode {
 	mode_t mode;
 };
 
+void *diofs_init(struct fuse_conn_info *conn);
 int diofs_getattr(const char *path, struct stat *s);
 int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi);
 int diofs_open(const char *path, struct fuse_file_info *fi);

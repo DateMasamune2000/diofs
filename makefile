@@ -1,7 +1,12 @@
-CFLAGS=`pkg-config fuse --cflags`
+CFLAGS=`pkg-config fuse --cflags` -ggdb -O0
 LIBS=`pkg-config fuse --libs`
 
 OBJFILES=main.o diofs.o
+
+all: diofs
+
+clean:
+	rm -f *.o diofs
 
 diofs: $(OBJFILES)
 	gcc $(LIBS) -o diofs $(OBJFILES)
