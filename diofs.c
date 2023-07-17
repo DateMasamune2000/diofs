@@ -96,9 +96,14 @@ struct diofs_inode *inode_from_path(const char *path) {
 	// NOTE: This part runs fine for now, but a cache might be needed later.
 	struct diofs_dentry *cfile = diofs_root.first_child, *cfile_prev = NULL;
 	struct diofs_inode *final_file = NULL;
+
+	// Split the path on '/', and check if the path is valid by walking the
+	// tree step-by-step
 	token = strtok_r(path_dup, "/", &saveptr1);
 	while (token != NULL) {
-		for (cfile = cfile; cfile != NULL; cfile = cfile->next_sib) {
+		if (cfile == NULL) goto cleanup;
+
+		for (; cfile != NULL; cfile = cfile->next_sib) {
 			if (new_strcmp(cfile->name, token) == STR_EQUAL) {
 				cfile_prev = cfile;
 				cfile = cfile->first_child;
@@ -106,24 +111,15 @@ struct diofs_inode *inode_from_path(const char *path) {
 				break;
 			}
 		}
-
-		if (cfile == NULL && token != NULL) {
-			goto cleanup;
-		}
 	}
 
-	if (token == NULL)
-		final_file = lookup_inode(cfile_prev->ino);
+	final_file = lookup_inode(cfile_prev->ino);
 
 cleanup:
 	// TODO: There's probably a better way to do this.
 	while (token != NULL) { token = strtok_r(NULL, "/", &saveptr1); }
-	free(path_dup);
 
-	if (final_file == NULL) {
-		errno = ENOENT;
-		return NULL;
-	}
+	free(path_dup);
 
 	return final_file;
 }
@@ -140,8 +136,7 @@ int diofs_getattr(const char *path, struct stat *s) {
 
 		return 0;
 	} else {
-		errno = ENOENT;
-		return -1;
+		return -ENOENT;
 	}
 }
 
@@ -164,8 +159,7 @@ int diofs_open(const char *path, struct fuse_file_info *fi) {
 	} else if (strcmp(path, "/test_file") == STR_EQUAL) {
 		return 0;
 	} else {
-		errno = ENOENT;
-		return -1;
+		return -ENOENT;
 	}
 }
 

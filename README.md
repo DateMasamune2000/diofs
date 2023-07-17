@@ -9,5 +9,5 @@
 `read`
 
 ## Roadmap
-1. Full file and directory support
+1. Full file and directory support - In progress
 2. Support for modifying files
