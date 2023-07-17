@@ -11,6 +11,7 @@
 
 #include "diofs.h"
 #include "util.h"
+#include "dentry.h"
 
 static struct diofs_dentry diofs_test_file;
 static struct diofs_dentry diofs_root;
