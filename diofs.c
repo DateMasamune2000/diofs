@@ -83,6 +83,8 @@ int new_strcmp(const char *x, const char *y) {
 
 // NOTE: Annotate the code and clean it up later.
 struct diofs_inode *inode_from_path(const char *path) {
+	// If the root is asked for, just return it. There is probably a more
+	// streamlined way to do this, but this works for now.
 	if (new_strcmp(path, "/") == STR_EQUAL) {
 		return &diofs_root_inode;
 	}
@@ -91,34 +93,31 @@ struct diofs_inode *inode_from_path(const char *path) {
 	char *path_dup = strdup(path);
 	char *token, *saveptr1;
 
-	// NOTE: This part may need to be cached to increase performance. Doing this
-	// each time a file is referenced might be a bad idea.
+	// NOTE: This part runs fine for now, but a cache might be needed later.
 	struct diofs_dentry *cfile = diofs_root.first_child, *cfile_prev = NULL;
 	struct diofs_inode *final_file = NULL;
-	char *prev_token = NULL;
 	token = strtok_r(path_dup, "/", &saveptr1);
-	while (prev_token != token) {
+	while (token != NULL) {
 		for (cfile = cfile; cfile != NULL; cfile = cfile->next_sib) {
 			if (new_strcmp(cfile->name, token) == STR_EQUAL) {
 				cfile_prev = cfile;
 				cfile = cfile->first_child;
-				prev_token = token;
-				token = strtok_r(path_dup, "/", &saveptr1);
+				token = strtok_r(NULL, "/", &saveptr1);
 				break;
 			}
 		}
 
-		if (cfile == NULL && token != prev_token) {
+		if (cfile == NULL && token != NULL) {
 			goto cleanup;
 		}
 	}
 
-	if (token == prev_token)
+	if (token == NULL)
 		final_file = lookup_inode(cfile_prev->ino);
 
 cleanup:
 	// TODO: There's probably a better way to do this.
-	// while (token != NULL) token = strtok_r(path_dup, "/", &saveptr1);
+	while (token != NULL) { token = strtok_r(NULL, "/", &saveptr1); }
 	free(path_dup);
 
 	if (final_file == NULL) {
