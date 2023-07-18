@@ -169,24 +169,22 @@ int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
 }
 
 int diofs_open(const char *path, struct fuse_file_info *fi) {
-	if (strcmp(path, "/") == STR_EQUAL) {
-		return 0;
-	} else if (strcmp(path, "/test_file") == STR_EQUAL) {
-		return 0;
-	} else {
+	struct diofs_dentry *d = dentry_from_path(path);
+	if (d == NULL)
 		return -ENOENT;
-	}
+	return 0;
 }
 
 int diofs_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
-	if (strcmp(path, temp_path) == STR_EQUAL) {
-		if ((offset + size) <= temp_len) {
-			memcpy(buf, temp_contents + offset, size);
+	struct diofs_inode *i = inode_from_path(path);
+	if (i != NULL) {
+		if ((offset + size) <= i->size) {
+			memcpy(buf, i->content + offset, size);
 			return size;
-		} else if (offset < temp_len) {
-			memcpy(buf, temp_contents + offset, temp_len - offset);
-			return temp_len - offset;
+		} else if (offset < i->size) {
+			memcpy(buf, i->content + offset, i->size - offset);
+			return i->size - offset;
 		} else {
 			return 0;
 		}
