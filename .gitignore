@@ -1,3 +1,5 @@
 diofs
 *.o
 .gdb*
+*.yy.c
+*.tab.c

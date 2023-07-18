@@ -82,12 +82,11 @@ int new_strcmp(const char *x, const char *y) {
 	return (y[a] == 0? STR_EQUAL : !STR_EQUAL);
 }
 
-// NOTE: Annotate the code and clean it up later.
-struct diofs_inode *inode_from_path(const char *path) {
+struct diofs_dentry *dentry_from_path(const char *path) {
 	// If the root is asked for, just return it. There is probably a more
 	// streamlined way to do this, but this works for now.
 	if (new_strcmp(path, "/") == STR_EQUAL) {
-		return &diofs_root_inode;
+		return &diofs_root;
 	}
 
 	// NOTE: This part is very inefficient. It may need to be sped up later.
@@ -96,7 +95,6 @@ struct diofs_inode *inode_from_path(const char *path) {
 
 	// NOTE: This part runs fine for now, but a cache might be needed later.
 	struct diofs_dentry *cfile = diofs_root.first_child, *cfile_prev = NULL;
-	struct diofs_inode *final_file = NULL;
 
 	// Split the path on '/', and check if the path is valid by walking the
 	// tree step-by-step
@@ -114,15 +112,23 @@ struct diofs_inode *inode_from_path(const char *path) {
 		}
 	}
 
-	final_file = lookup_inode(cfile_prev->ino);
-
 cleanup:
 	// TODO: There's probably a better way to do this.
 	while (token != NULL) { token = strtok_r(NULL, "/", &saveptr1); }
 
 	free(path_dup);
 
-	return final_file;
+	return cfile_prev;
+}
+
+// NOTE: Annotate the code and clean it up later.
+struct diofs_inode *inode_from_path(const char *path) {
+	struct diofs_dentry *dentry = dentry_from_path(path);
+	if (dentry == NULL) {
+		return NULL;
+	} else {
+		return lookup_inode(dentry->ino);
+	}
 }
 
 int diofs_getattr(const char *path, struct stat *s) {
@@ -149,7 +155,17 @@ int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, temp_filename, NULL, 0);
+
+	struct diofs_dentry *cdentry = dentry_from_path(path);
+	if (cdentry == NULL) return -ENOENT;
+
+	struct diofs_inode *cinode = lookup_inode(cdentry->ino);
+	if (!(cinode->mode & S_IFDIR)) return -ENOTDIR;
+
+	for (cdentry = cdentry->first_child; cdentry != NULL;
+			cdentry = cdentry->next_sib) {
+		filler(buf, cdentry->name, NULL, 0);
+	}
 
 	return 0;
 }

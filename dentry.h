@@ -20,6 +20,11 @@ struct diofs_inode {
 	ino_t ino;
 	nlink_t nlink;
 	mode_t mode;
+	struct diofs_inode *next;
+};
+
+struct diofs_inode_list {
+	struct diofs_inode *start;
 };
 
 #endif
