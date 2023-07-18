@@ -3,6 +3,9 @@ LIBS=`pkg-config fuse --libs`
 
 OBJFILES=main.o diofs.o
 
+run: all
+	./diofs -s -f /tmp/diofs/ 2> errors.log
+
 all: diofs
 
 clean:

@@ -3,3 +3,4 @@ diofs
 .gdb*
 *.yy.c
 *.tab.c
+errors.log

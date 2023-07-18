@@ -121,7 +121,6 @@ cleanup:
 	return cfile_prev;
 }
 
-// NOTE: Annotate the code and clean it up later.
 struct diofs_inode *inode_from_path(const char *path) {
 	struct diofs_dentry *dentry = dentry_from_path(path);
 	if (dentry == NULL) {
@@ -147,7 +146,6 @@ int diofs_getattr(const char *path, struct stat *s) {
 	}
 }
 
-// NOTE: Get to this next
 int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info* fi) {
 	(void) offset;
