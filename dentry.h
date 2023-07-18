@@ -27,4 +27,13 @@ struct diofs_inode_list {
 	struct diofs_inode *start;
 };
 
+extern struct diofs_dentry *diofs_root;
+extern struct diofs_inode_list diofs_inodes;
+
+
+void diofs_d_freeall_child(struct diofs_dentry *d);
+void diofs_i_freeall_next(struct diofs_inode *n);
+struct diofs_inode *lookup_inode(ino_t ino);
+struct diofs_dentry *dentry_from_path(const char *path);
+struct diofs_inode *inode_from_path(const char *path);
 #endif
