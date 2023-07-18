@@ -11,6 +11,7 @@
 
 struct fuse_operations diofs_ops = {
 	.init = diofs_init,
+	.destroy = diofs_destroy,
 	.getattr = diofs_getattr,
 	.readdir = diofs_readdir,
 	.open = diofs_open,

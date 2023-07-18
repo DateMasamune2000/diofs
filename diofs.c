@@ -32,7 +32,7 @@ void diofs_i_freeall_next(struct diofs_inode *n) {
 	free(n);
 }
 
-void *diofs_destroy(void *private_data) {
+void diofs_destroy(void *private_data) {
 	diofs_d_freeall_child(diofs_root);
 	diofs_i_freeall_next(diofs_inodes.start);
 }
