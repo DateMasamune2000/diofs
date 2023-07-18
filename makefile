@@ -1,10 +1,10 @@
 CFLAGS=`pkg-config fuse --cflags` -ggdb -O0
 LIBS=`pkg-config fuse --libs`
 
-OBJFILES=main.o diofs.o
+OBJFILES=main.o diofs.o util.o
 
 run: all
-	./diofs -s -f /tmp/diofs/ 2> errors.log
+	./diofs -s -f /tmp/diofs/
 
 all: diofs
 
@@ -13,6 +13,9 @@ clean:
 
 diofs: $(OBJFILES)
 	gcc $(LIBS) -o diofs $(OBJFILES)
+
+util.o: util.h util.c
+	gcc -c -o util.o $(CFLAGS) util.c
 
 diofs.o: diofs.c config.h util.h diofs.h
 	gcc -c -o diofs.o $(CFLAGS) diofs.c
