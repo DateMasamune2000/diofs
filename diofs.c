@@ -37,6 +37,15 @@ void *diofs_init(struct fuse_conn_info *conn) {
 		.next_sib = NULL,
 	};
 
+	diofs_root->first_child->next_sib = NEW(struct diofs_dentry);
+	*(diofs_root->first_child->next_sib) = (struct diofs_dentry) {
+		.parent = diofs_root,
+		.name = "test_dir",
+		.ino = 3,
+		.first_child = NULL,
+		.next_sib = NULL,
+	};
+
 	diofs_inodes.start = NEW(struct diofs_inode);
 	*(diofs_inodes.start) = (struct diofs_inode) {
 		.content = NULL,
@@ -56,6 +65,15 @@ void *diofs_init(struct fuse_conn_info *conn) {
 	};
 	diofs_inodes.start->next->size
 		= strlen(diofs_inodes.start->next->content);
+
+	diofs_inodes.start->next->next = NEW(struct diofs_inode);
+	*(diofs_inodes.start->next->next) = (struct diofs_inode) {
+		.content = NULL,
+		.nlink = 2,
+		.ino = 3,
+		.mode = S_IFDIR | 0755,
+		.size = 0
+	};
 }
 
 int diofs_getattr(const char *path, struct stat *s) {
