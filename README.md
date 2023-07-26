@@ -19,4 +19,7 @@
 
 ## Build instructions
 - Run `make clean` to remove object files
-- Run `make all` to build `diofs`
+- Run `make all` to build `diofs`.
+
+## Usage
+- `diofs` accepts the default FUSE arguments, and can be mounted similarly to most FUSE-based filesystems (e.g. `./diofs /tmp/diofs_mntpt` or `./diofs -s -f /tmp/diofs_mntpt`)
