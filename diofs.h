@@ -1,3 +1,8 @@
+/*
+ *    *** diofs.h ***
+ *  Contains declarations for diofs methods. Exports a struct called diofs_ops
+ *  that can be directly supplied to the fuse_main method.
+ */
 #ifndef _DIOFS_H
 #define _DIOFS_H
 

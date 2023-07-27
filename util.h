@@ -1,3 +1,7 @@
+/*
+ *   *** util.h ***
+ *   Declares useful functions and macros not specific to diofs.
+ */
 #ifndef _DIOFS_UTIL_H
 #define _DIOFS_UTIL_H
 

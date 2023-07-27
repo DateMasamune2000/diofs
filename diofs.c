@@ -1,3 +1,8 @@
+/*
+ *   *** diofs.c ***
+ *   Contains all the FUSE callbacks for diofs. Helper functions may be found
+ *   elsewhere.
+ */
 #include "config.h"
 
 #include <asm-generic/errno-base.h>

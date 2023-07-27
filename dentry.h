@@ -1,3 +1,8 @@
+/*
+ *    *** dentry.h ***
+ *    Contains declarations of datatypes and functions for working with
+ *    directory entires and inodes.
+ */
 #ifndef _DIOFS_DENTRY_H
 #define _DIOFS_DENTRY_H
 

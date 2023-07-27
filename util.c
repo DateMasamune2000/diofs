@@ -1,3 +1,7 @@
+/*
+ *   *** util.c ***
+ *   Implements functions in util.h
+ */
 #include "util.h"
 
 #include <stddef.h>

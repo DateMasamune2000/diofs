@@ -1,3 +1,7 @@
+/*
+ *   *** dentry.c ***
+ *   Contains functions that deal with dentries and inodes
+ */
 #include "dentry.h"
 
 #include <stdlib.h>
