@@ -76,6 +76,7 @@ cleanup:
 	return cfile_prev;
 }
 
+// Gets a pointer to the inode from the path.
 struct diofs_inode *inode_from_path(const char *path) {
 	struct diofs_dentry *dentry = dentry_from_path(path);
 	if (dentry == NULL) {

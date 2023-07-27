@@ -13,6 +13,15 @@
 #include "util.h"
 #include "dentry.h"
 
+struct fuse_operations diofs_ops = {
+	.init = diofs_init,
+	.destroy = diofs_destroy,
+	.getattr = diofs_getattr,
+	.readdir = diofs_readdir,
+	.open = diofs_open,
+	.read = diofs_read
+};
+
 void diofs_destroy(void *private_data) {
 	diofs_d_freeall_child(diofs_root);
 	diofs_i_freeall_next(diofs_inodes.start);
@@ -114,6 +123,8 @@ int diofs_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
 	return 0;
 }
 
+// Currently only checks if the file exists
+// NOTE: show an error if a directory is opened
 int diofs_open(const char *path, struct fuse_file_info *fi) {
 	struct diofs_dentry *d = dentry_from_path(path);
 	if (d == NULL)

@@ -4,6 +4,8 @@
 #include "config.h"
 #include <fuse/fuse.h>
 
+extern struct fuse_operations diofs_ops;
+
 void *diofs_init(struct fuse_conn_info *conn);
 void diofs_destroy(void *private_data);
 int diofs_getattr(const char *path, struct stat *s);
